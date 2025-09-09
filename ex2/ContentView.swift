@@ -12,15 +12,18 @@ struct ContentView: View {
     private let stickImageName = "stick"
     @State private var totalMerit = 0
     @State private var particles: [Particle] = []
+    @State private var showAward = false
     @State private var stickSwing = false
     @State private var fishBump = false
+    
     
     var body: some View {
         GeometryReader { geo in
             ZStack {
+                awardOverlay
                 Color.black.ignoresSafeArea()
-                
-        
+            
+            
                 Image(fishImageName)
                     .resizable()
                     .scaledToFit()
@@ -36,7 +39,7 @@ struct ContentView: View {
                                   y: p.position.y + p.offsetY)
                         .allowsHitTesting(false)
                 }
-                
+    
    
         
             VStack {
@@ -64,6 +67,15 @@ struct ContentView: View {
                           y: geo.size.height * 0.83)
             }
         }
+        .onChange(of: totalMerit) { newValue in
+            if awardMilestones.keys.contains(newValue) {
+                withAnimation { showAward = true }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    withAnimation { showAward = false }
+                }
+            }
+        }
+
     }
     
 
@@ -118,6 +130,31 @@ struct Particle: Identifiable {
     var position: CGPoint
     var opacity: Double
     var offsetY: CGFloat
+}
+
+extension ContentView {
+    
+    private var awardMilestones: [Int: String] {
+        [
+            10:  "award1",
+            50:  "award2",
+            100: "award3"
+        ]
+    }
+
+    @ViewBuilder
+    var awardOverlay: some View {
+        if let assetName = awardMilestones[totalMerit], showAward {
+            Image(assetName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 220)
+                .shadow(radius: 20)
+                .padding()
+                .transition(.scale.combined(with: .opacity))
+                .zIndex(10)
+        }
+    }
 }
 
 #Preview {
